@@ -26,10 +26,8 @@ int main(int argc, char *argv[])
 
 // Example input: 
 // $ gcc hello-thread.c -o g csapp.c -pthread
-// $ ./g 8
+// $ ./g 3
 // Resulting output:
 // Hello, world!
 // Hello, world!
 // Hello, world!
-
-# UCLA_Computer_Organization
