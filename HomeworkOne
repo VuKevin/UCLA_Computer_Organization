@@ -1,4 +1,5 @@
 // Kevin Vu
+// Text: Randal E. Bryant and David R. O'Hallaron, Computer Systems: A Programmer's Perspective, 3rd edition 
 
 
 // 2.64 Handling odd bits, return 1 if that odd bit equals 1; return 0 otherwise
