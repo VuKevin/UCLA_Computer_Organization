@@ -1,0 +1,57 @@
+int switch_prob(int x) 
+{
+	int result = x;
+	switch (x)
+	{
+		case 50:
+		case 52:
+			result <<= 2;
+			break;
+		case 53:
+			result >>= 2;
+			break;
+		case 54:
+			result *= 3;
+			break;
+		default:
+			result += 10;	
+	}
+	return result;
+}
+
+Figure 3.38 shows the disassembled object code for the procedure. We are only
+interested in the part of the code shown on lines 4 through 16. We can see on line 4 that
+parameter x (at offset 8 relative to %ebp) is loaded into register %eax, corresponding to
+program variable result. The “lea 0x0(%esi), %esi” instruction on line 11 is a nop
+instruction inserted to make the instruction on line 12 start on an address that is a
+multiple of 16
+
+The jump table resides in a different area of memory. Using the debugger GDB,
+we can examine the six 4-byte words of memory starting at address 0x8048468 with the
+command x/6w 0x8048468. GDB prints the following:
+
+(gdb) x/6w
+0x8048468: 0x080483d5 0x080483eb 0x080483d5 0x0x80483e0
+0x8048478: 0x080483e5 0x080483e8
+(gdb)
+
+Assembly Code:
+1: 080483c0 <switch_prob>:
+2: 80483c0: push %ebp
+3: 80483c1: mov %esp,%ebp
+4: 80483c3: mov 0x8(%ebp),%eax // X is copied into eax ; eax = x
+5: 80483c6: lea 0xffffffce(%eax),%edx // placeholder 
+6: 80483c9: cmp $0x5, %edx // Compare edx (3rd argument) with 5; Edx - 5 // clearly, edx is x
+7: 80483cc: ja 80483eb <switch_prob+0x2b> // if edx - 5 > 0, Jump into line 16 (default)
+8: 80483ce: jmp *0x8048468(,%edx,4) // Go into the jump table
+9: 80483d5: shl $0x2, %eax // eax << 2
+10: 80483d8: jmp 80483ee <switch_prob+0x2e> // Jump to line 17
+11: 80483da: lea 0x0(%esi),%esi // esi = esi  NOP. Filling in N bytes
+12: 80483e0: sar $0x2, %eax // eax >> 2
+13: 80483e3: jmp 80483ee <switch_prob+0x2e> // Jump to line 17
+14: 80483e5: lea (%eax, %eax, 2), %eax // eax = eax + 2(eax)
+15: 80483e8: imul %eax, %eax // eax *= eax
+16: 80483eb: add $0xa, %eax // eax += 10
+17: 80483ee: mov %ebp, %esp // esp = ebp
+18: 80483f0: pop %ebp
+19: 80483f1: ret
