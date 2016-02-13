@@ -1,0 +1,59 @@
+  #include <limits.h>
+  #include <stdbool.h>
+  long big = LONG_MAX;
+  bool
+  testovf (void)
+  {
+    return big + LONG_MAX < big; // return true if (0x7fffffffffffffff + 0x7fffffffffffffff) < 0x7fffffffffffffff)
+  }
+  
+  // *Annotated Assembly Code* //
+  Disassembly of section .text: // with -O2
+
+0000000000000000 <testovf>:
+   0:   31 c0                   xor    %eax,%eax
+   2:   c3                      retq
+
+   
+   
+   Disassembly of section .text: // with -O2 -fsanitize=undefined
+
+0000000000000000 <testovf>:
+   0:   55                      push   %rbp 
+   1:   53                      push   %rbx
+   2:   48 ba ff ff ff ff ff    movabs $0x7fffffffffffffff,%rdx // rdx = 0x7fffffffffffffff
+   9:   ff ff 7f
+   c:   48 83 ec 08             sub    $0x8,%rsp // rsp = rsp - 0x8
+  10:   48 8b 1d 00 00 00 00    mov    0x0(%rip),%rbx        # 17 <testovf+0x17> // rbx = M[0x17]
+  17:   48 89 dd                mov    %rbx,%rbp // rbp = M[0x17]
+  1a:   48 01 d5                add    %rdx,%rbp // rbp = M[0x17] + 0x7fffffffffffffff
+  1d:   70 0d                   jo     2c <testovf+0x2c> // Jump to 2c if the add above caused overflow
+  1f:   48 39 eb                cmp    %rbp,%rbx // rbx - rbp 
+  22:   0f 9f c0                setg   %al // if rbx - rbp > ---> rbx > rbp, then setg flag
+  25:   48 83 c4 08             add    $0x8,%rsp // rsp += 0x8
+  29:   5b                      pop    %rbx 
+  2a:   5d                      pop    %rbp
+  2b:   c3                      retq
+  2c:   48 89 de                mov    %rbx,%rsi // rsi = M[0x17]
+  2f:   bf 00 00 00 00          mov    $0x0,%edi // edi = 0x0
+  34:   e8 00 00 00 00          callq  39 <testovf+0x39> // call 39
+  39:   eb e4                   jmp    1f <testovf+0x1f> // direct jmp back to 1f
+  
+  
+  Disassembly of section .text: // with -O2 -fwrapv. 
+
+0000000000000000 <testovf>:
+   0:   48 8b 15 00 00 00 00    mov    0x0(%rip),%rdx        # 7 <testovf+0x7> // rdx = M[0x7]
+   7:   48 b8 ff ff ff ff ff    movabs $0x7fffffffffffffff,%rax // rax = 0x7fffffffffffffff
+   e:   ff ff 7f
+  11:   48 01 d0                add    %rdx,%rax // rax = 0x7fffffffffffffff + M[0x7]
+  14:   48 39 c2                cmp    %rax,%rdx // rdx - rax 
+  17:   0f 9f c0                setg   %al // if rdx > rax, set al t
+  1a:   c3                      retq
+  
+  
+ =======================================================  =======================================================
+Compare the resulting assembly-language files, and describe and justify the differences that you see. 
+Put your description into a plain ASCII text file testovf.txt:
+
+The three different assembly-language files are compiled with -O2, -O2 -fsanitize=undefined, and -O2 -fwrapv respectively. In terms of amount of assembly line code, -O2 has the least, then -O2 -fwrapv, and lastly -O2 -fsanitize=undefined. For -O2, the optimization literally just uses the xor assembly to mirror the contents of the function. That is, if eax disagrees then it will return true, else it shouldn't. But in this case, it will always return 0 and disregards any comparison because big + c < big is always false in a logical note. For -O2 -fsanitize=undefined, this compilation is geared and enabled to detect undefined behavior at runtime and give a diagnostic message. More specifically, after pushing rbx and rbp onto the stack frame, it moves the 64 bit immediate 0x7fffffffffffffff into rdx. Then the stack is grown by subtracting 0x8 and the addition is ultimately performed. If the addition operation caused an overflow, the machine code would jump to a new block of code in which rsi is given rbx's M[0x17], and edi is given the immediate 0 before directly jumping back to the instruction following the first overflow check. This is similar to -ftrapv but instead of traps being set for signed overflows, alerts are given. "The code may never call the testovf fxn."Lastly for -O2 -fwrapv, this instructs the compiler let signed arithmetic overflow wrap around using 2's complements representation. Rdx is given the value inside memory of the 0x7 instruction. Then the immediate LONG_MAX is loaded into rax where the addition occurs after. Then the comparison is made and set if rdx is greater than rax as we have seen. For context, rdx holds big and rax holds LONGMAX in the beginning. 
