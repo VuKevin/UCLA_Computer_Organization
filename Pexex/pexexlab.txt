@@ -1,0 +1,29 @@
+pexexlab.txt
+Kevin Vu CS 33 Fall 2015
+============================
+Keep a log in the file pexexlab.txt of what you do in the lab so that you can reproduce the results later. This should not merely be a transcript of what you typed: it should be more like a lab notebook, in which you briefly note down what you did and what happened. It should record not just what worked, but also what didn't work.
+
+-> Accessed lnxsrv09.seas.ucla.edu via Putty
+-- gdb ~eggert/bin64/bin/emacs-24.5    //  GDB start, don't forget the two bins or you'll be accessing something weird
+-- break Ftimes //  A breakpoint set @ Ftimes
+-- r -batch -eval '(print (* 6997 -4398042316799 179))'   // Run the program
+-- set disassemble-next-line on // Print the assembly code each step
+
+*At this point, I used stepi and step to manuever throughout the program and using info registers $xxx to obtain information about the changes being made to the registers. Note: Omitting the $ will give the same result. If I needed to start over because of having to move locations or a mistake, just 'run' again. Even if the jump didn't occur, I still recorded rip to indicate that. Total lines anticipated: 144 
+
+Misc GDB Commands for those interested:
+- Setting watch points [watch] [target]
+- Setting break points [break] [target]
+- Getting info info [target]
+- Continue execution until next break c[ontinue]
+- Disassembling a function disas[semble] fxn
+- Display [target]
+- Running gdp on fxn.c: gdb fxn.c
+
+Making a compressed tar file: Pexex in home directory and move all files into it.
+In Linux, tar -cvzf pexex.tgz pexex
+
+Pwd to see where you are in the directory.
+Wrong command line: gdb ~eggert/bin64/bin/emacs-24.5 // you need the gdb else it will be a menu with emac tutorials
+Text Editor used: Sublime text: Use alt/option with your mouse to select boxes of text at a time.
+This Program Execution Explorer Lab is designed to force us to learn the uses of GDB hands on.
