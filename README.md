@@ -13,5 +13,6 @@ Lab 4	100 / 100 For me: Speedup=7.75 functime=0.077 is_correct=True (extracred_p
 Homework 1	90 / 100	
 Homework 2	98 / 100	
 Homework 3	99 / 100
+
 Homework 4	100 / 100	
 Homework 5	90 / 100	
